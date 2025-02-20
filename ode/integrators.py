@@ -17,7 +17,7 @@ def RK4(dt, f, t, y, args):
     k2 = f(t + dt/2, y + k1*dt/2, *args)
     k3 = f(t + dt/2, y + k2*dt/2, *args)
     k4 = f(t + dt, y + k3*dt, *args)
-    return y + ((1/6 * k1) + (1/3 * k2) + (1/3 * k3) + (1/6 * k4)) * dt
+    return y + ((1/6 * k1) + (1/3 * k2) + (1/3 * k3) + (1/6 * k4)) # this should be correct, might need to multiply by dt
 
 
 def solve_ode(f,tspan, y0, method = Euler, args=(), **options):
