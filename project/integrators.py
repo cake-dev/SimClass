@@ -63,7 +63,7 @@ def RK45(dt, f, t, y, rtol, atol, args):
     if error < 1:
         return y_new # if the error is small enough, we return the new y
     else:
-        return RK45(dt/2, f, t, y, args) # if the error is too large, we half the step size and try again
+        return RK45(dt/2, f, t, y, rtol, atol, args) # if the error is too large, we half the step size and try again
 
     # return y_new, y_star
 
