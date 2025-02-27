@@ -148,8 +148,8 @@ def solve_ode_RK45(f,tspan, y0, method = RK45, args=(), **options):
     rtol = options.get('rtol',1e-6)
     atol = options.get('atol',1e-6)
 
-    print(f'rtol: ', rtol)
-    print(f'atol: ', atol)
+    # print(f'rtol: ', rtol)
+    # print(f'atol: ', atol)
     
     while t[-1]<tf:
         y.append(method(dt, f, t[-1], y[-1], rtol, atol, args))

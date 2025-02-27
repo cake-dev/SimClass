@@ -82,4 +82,53 @@ def g_force(m1, m2, g, r_vec):
     return g * m1 * m2 * r_vec / (r_hat**3)
 
 
-# def n_body_helium
+# new force function for helium
+def helium_force(m1, m2, g, r_vec):
+    '''
+    Calculate force between particles in helium atom
+    m1, m2: charges (-1 for electrons, 2 for nucleus)
+    r_vec: vector from m2 to m1
+    Returns force vector on m1 due to m2
+    '''
+    r_hat = np.linalg.norm(r_vec)
+    if r_hat == 0:  # Prevent division by zero
+        return np.zeros_like(r_vec)
+    # Coulomb force: F = q1*q2*r_vec/r^3
+    # Units chosen where |F| = 1/r^2 between electrons
+    return m1 * m2 * r_vec / (r_hat**3)
+
+# new rhs function for helium
+def n_body_helium(t, y, p):
+    G = p['G']
+    charges = p['m']  # m is charges in this case
+    n = len(charges)
+    d = p['dimension']
+    
+    positions = y[:n*d].reshape((n, d))
+    velocities = y[n*d:].reshape((n, d))
+    
+    F = np.zeros((n, n, d))
+    
+    # Calculate forces
+    for i in range(n):
+        for j in range(i+1, n):
+            r_vec = positions[i] - positions[j]
+            force = helium_force(charges[i], charges[j], G, r_vec)
+            F[i,j] = -force
+            F[j,i] = force
+
+    # Compute accelerations (F/m, mass = 1 for electrons)
+    acc = np.zeros_like(positions)
+    for i in range(n):
+        total_force = np.sum(F[i], axis=0)
+        acc[i] = total_force  # mass = 1
+    
+    if p.get("fix_first", True):
+        acc[0] = 0.0
+        velocities[0] = 0.0
+    
+    dydt = np.concatenate((velocities.flatten(), acc.flatten()))
+    if p.get("fix_first", True):
+        dydt[:d] = 0.0
+        
+    return dydt
