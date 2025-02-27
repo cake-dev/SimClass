@@ -54,15 +54,15 @@ def RK45(dt, f, t, y, args):
     y_new = y + dt * np.dot(b_params, k) # calculate the new y
     y_star = y + dt * np.dot(b_star_params, k) # y_star is used to estimate the error
 
-    scale = atol + np.maximum(np.abs(y), np.abs(y_new)) * rtol
-    error = np.linalg.norm((y_new - y_star) / scale)
-    print(f'dt: ', dt)
-    print(f'error: ', error)
+    scale = atol + np.maximum(np.abs(y), np.abs(y_new)) * rtol # scale is used to calculate the error
+    error = np.linalg.norm((y_new - y_star) / scale) # error is described as a norm in the book
+    # print(f'dt: ', dt)
+    # print(f'error: ', error)
     # delta = np.abs(y_new - y_star) <= scale
     if error < 1:
-        return y_new
+        return y_new # if the error is small enough, we return the new y
     else:
-        return RK45(dt/2, f, t, y, args)
+        return RK45(dt/2, f, t, y, args) # if the error is too large, we half the step size and try again
 
     # return y_new, y_star
 
