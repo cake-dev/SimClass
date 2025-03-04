@@ -19,54 +19,6 @@ def RK4(dt, f, t, y, args):
     k4 = f(t + dt, y + k3*dt, *args)
     return y + dt *((1/6 * k1) + (1/3 * k2) + (1/3 * k3) + (1/6 * k4))
 
-def RK45(dt, f, t, y, rtol, atol, args):
-    # atol = 1e-10
-    # rtol = 1e-14
-
-    # magic numbers
-    c_params = np.array([0, 1/5, 3/10, 4/5, 8/9, 1, 1])
-    a_params = np.array([[0, 0, 0, 0, 0, 0],
-                          [1/5, 0, 0, 0, 0, 0],
-                          [3/40, 9/40, 0, 0, 0, 0],
-                          [44/45, -56/15, 32/9, 0, 0, 0],
-                          [19372/6561, -25360/2187, 64448/6561, -212/729, 0, 0],
-                          [9017/3168, -355/33, 46732/5247, 49/176, -5103/18656, 0],
-                          [35/384, 0, 500/1113, 125/192, -2187/6784, 11/84]])
-    b_params = np.array([35/384, 0, 500/1113, 125/192, -2187/6784, 11/84, 0])
-    b_star_params = np.array([5179/57600, 0, 7571/16695, 393/640, -92097/339200, 187/2100, 1/40])
-
-    k = np.zeros((7, len(y)))
-    # first step
-    # k[0] = f(t, y, *args)
-    # # second step
-    # k[1] = f(t + c_params[1] * dt, y + a_params[1, 0] * dt * k[0], *args)
-    # # third step
-    # k[2] = f(t + c_params[2] * dt, y + dt * (a_params[2, 0] * k[0] + a_params[2, 1] * k[1]), *args)
-    # # fourth step
-    # k[3] = f(t + c_params[3] * dt, y + dt * (a_params[3, 0] * k[0] + a_params[3, 1] * k[1] + a_params[3, 2] * k[2]), *args)
-    # # ..... we can put this in a loop
-
-    k[0] = f(t, y, *args) # first step
-    for i in range(1, 7): # iterate over the rest of the steps (1 to 6)
-        y_sum = np.zeros_like(y) # this will be our sum of y's over each k step
-        for j in range(i): # sum over all previous k's
-            y_sum += a_params[i, j] * k[j] 
-        k[i] = f(t + c_params[i] * dt, y + dt * y_sum, *args) # calculate the next k
-    y_new = y + dt * np.dot(b_params, k) # calculate the new y
-    y_star = y + dt * np.dot(b_star_params, k) # y_star is used to estimate the error
-
-    scale = atol + np.maximum(np.abs(y), np.abs(y_new)) * rtol # scale is used to calculate the error
-    error = np.linalg.norm((y_new - y_star) / scale) # error is described as a norm in the book
-    # print(f'dt: ', dt)
-    # print(f'error: ', error)
-    # delta = np.abs(y_new - y_star) <= scale
-    if error < 1:
-        return y_new # if the error is small enough, we return the new y
-    else:
-        return RK45(dt/2, f, t, y, rtol, atol, args) # if the error is too large, we half the step size and try again
-
-    # return y_new, y_star
-
 
 def solve_ode(f,tspan, y0, method = Euler, args=(), **options):
     """
@@ -138,21 +90,152 @@ def solve_ode(f,tspan, y0, method = Euler, args=(), **options):
     
     return np.array(t), np.array(y)
 
-def solve_ode_RK45(f,tspan, y0, method = RK45, args=(), **options):
+# def solve_ode_RK45(f,tspan, y0, method = RK45, args=(), **options):
     
+#     t0 = tspan[0]
+#     tf = tspan[1]
+#     y = [y0]
+#     t = [t0]
+#     dt = options.get('first_step')#,0.1)
+#     rtol = options.get('rtol',1e-6)
+#     atol = options.get('atol',1e-6)
+    
+#     while t[-1]<tf:
+#         y.append(method(dt, f, t[-1], y[-1], rtol, atol, args))
+#         t.append(t[-1] + dt)
+    
+#     return np.array(t), np.array(y)
+
+
+# def RK45(dt, f, t, y, rtol, atol, args):
+#     # atol = 1e-10
+#     # rtol = 1e-14
+
+#     # magic numbers
+#     c_params = np.array([0, 1/5, 3/10, 4/5, 8/9, 1, 1])
+#     a_params = np.array([[0, 0, 0, 0, 0, 0],
+#                           [1/5, 0, 0, 0, 0, 0],
+#                           [3/40, 9/40, 0, 0, 0, 0],
+#                           [44/45, -56/15, 32/9, 0, 0, 0],
+#                           [19372/6561, -25360/2187, 64448/6561, -212/729, 0, 0],
+#                           [9017/3168, -355/33, 46732/5247, 49/176, -5103/18656, 0],
+#                           [35/384, 0, 500/1113, 125/192, -2187/6784, 11/84]])
+#     b_params = np.array([35/384, 0, 500/1113, 125/192, -2187/6784, 11/84, 0])
+#     b_star_params = np.array([5179/57600, 0, 7571/16695, 393/640, -92097/339200, 187/2100, 1/40])
+
+#     k = np.zeros((7, len(y)))
+#     # first step
+#     # k[0] = f(t, y, *args)
+#     # # second step
+#     # k[1] = f(t + c_params[1] * dt, y + a_params[1, 0] * dt * k[0], *args)
+#     # # third step
+#     # k[2] = f(t + c_params[2] * dt, y + dt * (a_params[2, 0] * k[0] + a_params[2, 1] * k[1]), *args)
+#     # # fourth step
+#     # k[3] = f(t + c_params[3] * dt, y + dt * (a_params[3, 0] * k[0] + a_params[3, 1] * k[1] + a_params[3, 2] * k[2]), *args)
+#     # # ..... we can put this in a loop
+
+#     k[0] = f(t, y, *args) # first step
+#     for i in range(1, 7): # iterate over the rest of the steps (1 to 6)
+#         y_sum = np.zeros_like(y) # this will be our sum of y's over each k step
+#         for j in range(i): # sum over all previous k's
+#             y_sum += a_params[i, j] * k[j] 
+#         k[i] = f(t + c_params[i] * dt, y + dt * y_sum, *args) # calculate the next k
+#     y_new = y + dt * np.dot(b_params, k) # calculate the new y
+#     y_star = y + dt * np.dot(b_star_params, k) # y_star is used to estimate the error
+
+#     scale = atol + np.maximum(np.abs(y), np.abs(y_new)) * rtol # scale is used to calculate the error
+#     error = np.linalg.norm((y_new - y_star) / scale) # error is described as a norm in the book
+#     # print(f'dt: ', dt)
+#     # print(f'error: ', error)
+#     delta = np.abs(y_new - y_star) <= scale
+    
+
+
+#     # if error < 1:
+#     #     return y_new # if the error is small enough, we return the new y
+#     # else:
+#     #     return RK45(dt/2, f, t, y, rtol, atol, args) # if the error is too large, we half the step size and try again
+
+#     # return y_new, y_star
+
+def RK45(dt, f, t, y, rtol, atol, args):
+    y = np.asarray(y) # sanity check
+    
+    # magic numbers
+    c_params = np.array([0, 1/5, 3/10, 4/5, 8/9, 1, 1])
+    a_params = np.array([
+        [0, 0, 0, 0, 0, 0],
+        [1/5, 0, 0, 0, 0, 0],
+        [3/40, 9/40, 0, 0, 0, 0],
+        [44/45, -56/15, 32/9, 0, 0, 0],
+        [19372/6561, -25360/2187, 64448/6561, -212/729, 0, 0],
+        [9017/3168, -355/33, 46732/5247, 49/176, -5103/18656, 0],
+        [35/384, 0, 500/1113, 125/192, -2187/6784, 11/84]
+    ])
+    b_params = np.array([35/384, 0, 500/1113, 125/192, -2187/6784, 11/84, 0])
+    b_star_params = np.array([5179/57600, 0, 7571/16695, 393/640, -92097/339200, 187/2100, 1/40])
+    
+    k = np.zeros((7, len(y)))
+    
+    # stage 0
+    k[0] = f(t, y, *args)
+    
+    # stage 1 to 6
+    for i in range(1, 7):
+        y_sum = np.zeros_like(y) # sum of y's over each k step
+        for j in range(i): # sum over all previous k's
+            y_sum += a_params[i, j] * k[j]
+        k[i] = f(t + c_params[i] * dt, y + dt * y_sum, *args) # calculate the next k
+    
+    # y_new - 4th order
+    y_new = y + dt * np.sum([b_params[i] * k[i] for i in range(7)], axis=0)
+    
+    # calc y_star for error estimation - 5th order
+    y_star = y + dt * np.sum([b_star_params[i] * k[i] for i in range(7)], axis=0)
+    
+    # error and scale used for step size adjustment
+    scale = atol + np.maximum(np.abs(y), np.abs(y_new)) * rtol # (17.2.8)
+    error = np.linalg.norm((y_new - y_star) / scale) / np.sqrt(len(y)) # (17.2.9)
+    
+    if error == 0:
+        dt_next = dt * 2.0  # double if 0 error (nice)
+    else:
+        # safe number from numerical recipes
+        dt_next = 0.9 * dt * (1.0 / error) ** (1.0/5.0) # H_n+1 = S * H_n * (1/error)^(1/5)  (17.2.12)
+    
+        # limit dt_next to 0.2 * dt and 10 * dt
+        dt_next = min(max(dt_next, 0.2 * dt), 10.0 * dt) # page 10 pdf
+    
+    # below 1 error is good, return new y and next step size
+    if error <= 1.0:
+        return y_new, dt_next
+    else:
+        # retry with the new step size if error is too large
+        return RK45(dt_next, f, t, y, rtol, atol, args)
+
+
+def solve_ode_RK45(f, tspan, y0, method=RK45, args=(), **options):
     t0 = tspan[0]
     tf = tspan[1]
     y = [y0]
     t = [t0]
-    dt = options.get('first_step')#,0.1)
-    rtol = options.get('rtol',1e-6)
-    atol = options.get('atol',1e-6)
-
-    # print(f'rtol: ', rtol)
-    # print(f'atol: ', atol)
+    dt = options.get('first_step', 0.1)
+    rtol = options.get('rtol', 1e-6)
+    atol = options.get('atol', 1e-6)
     
-    while t[-1]<tf:
-        y.append(method(dt, f, t[-1], y[-1], rtol, atol, args))
+    while t[-1] < tf: 
+        # adjust step size if we are close to the end
+        if t[-1] + dt > tf:
+            dt = tf - t[-1]
+        
+        # compute next step
+        y_next, dt_next = method(dt, f, t[-1], y[-1], rtol, atol, args)
+        
+        # get new step size
+        dt = dt_next
+        
+        # append results
+        y.append(y_next)
         t.append(t[-1] + dt)
-    
+        
     return np.array(t), np.array(y)
